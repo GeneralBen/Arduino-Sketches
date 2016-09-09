@@ -32,10 +32,16 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 int keySelection;
 #define btnSELECT	1	// 640
 #define btnLEFT		2	//	408
-#define btnRIGHT		3	// 99
-#define btnUP			4	// 255
-#define btnDOWN		5	// 0
+#define btnRIGHT		3	// 0
+#define btnUP			4	// 99
+#define btnDOWN		5	// 255
 #define btnNONE		0	// 1023
+
+// Screen navigation
+#define MAXSCREENS 2	// update this as screens are added 
+int screen;
+long unsigned int timer;
+
 
 void setup()
 {
@@ -47,6 +53,11 @@ void setup()
 
 	// initialize key to 0
 	keySelection = 0;
+
+	// initialize screen variable
+	screen = 1;
+
+	timer = millis();
 }
 
 
@@ -63,9 +74,98 @@ void loop()
 		if (keySelection != 0)
 		{
 			Serial.println(keySelection);
+
+			if (keySelection == btnLEFT || keySelection == btnRIGHT)
+			{
+				screenSwitch(keySelection);
+			}
 		}
 	}
 	
+	Serial << "millis -->  "<< millis() << " ,  timer -->  " << timer << "\n";
+
+	// update screen
+	displayScreen();
+}
+
+// this will allow user to switch between screens
+void screenSwitch(int direction)
+{
+	// Screens can be added to this
+	// ** currently there are only 2 screens **
+	// ** update this as screens are added **
+
+	if (direction == btnLEFT)
+	{
+		if (screen > 1)
+		{
+			screen--;
+		}
+		else
+		{
+			screen = MAXSCREENS;
+		}
+	}
+
+	if (direction == btnRIGHT)
+	{
+		if (screen < MAXSCREENS)
+		{
+			screen++;
+		}
+		else
+		{
+			screen = 1;
+		}
+	}
+
+	lcdLineClear(3);
+
+	switch (screen)
+	{
+		// time
+		case 1:
+			lcd.setCursor(0, 0);
+			lcd.print("Time");
+			break;
+
+		// about
+		case 2:
+			lcd.setCursor(0, 0);
+			lcd.print("Ben made this");
+			lcd.setCursor(0, 1);
+			lcd.print("to be continued");
+			break;
+
+		default:
+			break;
+	}
+}
+
+void displayScreen()
+{
+	// Screens can be added to this
+	// ** currently there are only 2 screens **
+	// ** update this as screens are added **
+	switch (screen)
+	{
+		// welcome screen -- time
+	case 1:
+		//if ()
+		
+		if ((timer + 1000) < millis())
+		{
+			lcdLineClear(2);
+			lcd.setCursor(0, 1);
+			timer = millis();
+			
+			lcd << "time " << timer;
+			Serial << "time " << timer << endl;
+		}
+		break;
+	default:
+		break;
+	}
 }
 
 int readKeys()
@@ -77,17 +177,17 @@ int readKeys()
 
 	if (keyOmhs < 10)
 	{
-		return btnDOWN;		// return 5
+		return btnRIGHT;		// return 5
 	}
 
 	else if (keyOmhs < 109 && keyOmhs > 89)
 	{
-		return btnRIGHT;		// return 3	
+		return btnUP;		// return 3	
 	}
 
 	else if (keyOmhs < 265 && keyOmhs > 245)
 	{
-		return btnUP;				// return 4
+		return btnDOWN;				// return 4
 	}
 
 	else if (keyOmhs < 418 && keyOmhs > 398)
